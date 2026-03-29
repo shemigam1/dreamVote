@@ -8,5 +8,4 @@ import java.util.Optional;
 public interface VoterRepository extends MongoRepository<Voter, String> {
     Optional<Voter> findByEmail(String email);
 
-
 }
