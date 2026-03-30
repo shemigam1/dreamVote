@@ -15,7 +15,7 @@ public class ElectionController {
     @Autowired
     private ElectionService electionService;
 
-    @PostMapping("/create")
+    @PostMapping("/")
     public ResponseEntity<ApiResponse> createElection(@RequestBody CreateElectionRequest request) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(true, electionService.createElection(request)));

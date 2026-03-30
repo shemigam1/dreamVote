@@ -17,7 +17,7 @@ public class VoterController {
     @Autowired
     private VoterService voterService;
 
-    @PostMapping("/register")
+    @PostMapping("/")
     public ResponseEntity<?> register(@RequestBody VoterRegisterationRequest request) {
         try{
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(true, voterService.register(request)));
