@@ -11,8 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static dreamVote.dreamdev.utils.Mapper.map;
-import static dreamVote.dreamdev.utils.Mapper.mapToLoginResponse;
+import static dreamVote.dreamdev.utils.Mapper.*;
 
 @Service
 public class VoterServiceImpl implements VoterService{
@@ -42,7 +41,13 @@ public class VoterServiceImpl implements VoterService{
 
     @Override
     public LogoutResponse logout(LogoutRequest logoutRequest) {
-        return null;
+        Optional<Voter> optionalVoter = voterRepository.findByEmail(logoutRequest.getEmail());
+        if(optionalVoter.isEmpty()) throw new InvalidLoginDetailsException("Voter with email " + logoutRequest.getEmail() + " does not exist");
+
+        Voter voter = optionalVoter.get();
+        voter.setLoggedIn(false);
+        Voter savedVoter = voterRepository.save(voter);
+        return mapToLogoutResponse(savedVoter);
     }
 
     @Override

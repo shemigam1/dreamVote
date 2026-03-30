@@ -3,6 +3,7 @@ package dreamVote.dreamdev.utils;
 import dreamVote.dreamdev.data.models.Voter;
 import dreamVote.dreamdev.dtos.requests.VoterRegisterationRequest;
 import dreamVote.dreamdev.dtos.responses.LoginResponse;
+import dreamVote.dreamdev.dtos.responses.LogoutResponse;
 import dreamVote.dreamdev.dtos.responses.VoterRegisterationResponse;
 
 public class Mapper {
@@ -28,5 +29,12 @@ public class Mapper {
         loginResponse.setLoggedIn(savedVoter.isLoggedIn());
         loginResponse.setEmail(savedVoter.getEmail());
         return loginResponse;
+    }
+
+    public static LogoutResponse mapToLogoutResponse(Voter savedVoter) {
+        LogoutResponse logoutResponse = new LogoutResponse();
+        logoutResponse.setLoggedIn(savedVoter.isLoggedIn());
+        logoutResponse.setEmail(savedVoter.getEmail());
+        return logoutResponse;
     }
 }
