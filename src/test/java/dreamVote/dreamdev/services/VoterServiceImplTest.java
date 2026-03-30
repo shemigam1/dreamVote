@@ -1,7 +1,9 @@
 package dreamVote.dreamdev.services;
 
 import dreamVote.dreamdev.data.repositories.VoterRepository;
+import dreamVote.dreamdev.dtos.requests.LoginRequest;
 import dreamVote.dreamdev.dtos.requests.VoterRegisterationRequest;
+import dreamVote.dreamdev.exceptions.DuplicateVoterException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,24 @@ public class VoterServiceImplTest {
         assertEquals(0L, voterRepository.count());
         voterService.register(voterRegisterationRequest);
         assertEquals(1L, voterRepository.count());
+    }
+
+    @Test
+    public void registerTwiceWithSameEmail_throwExceptionTest(){
+        assertEquals(0L, voterRepository.count());
+        voterService.register(voterRegisterationRequest);
+        assertThrows(DuplicateVoterException.class, ()-> voterService.register(voterRegisterationRequest));
+        assertEquals(1L, voterRepository.count());
+    }
+
+    @Test
+    public void loginRegisterVoter_voterIsLoggedInTest(){
+        voterService.register(voterRegisterationRequest);
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setEmail("email");
+        loginRequest.setPassword("password");
+        voterService.login(loginRequest);
+        assertTrue(voterRepository.findByEmail("email").get().isLoggedIn());
     }
 
 }
