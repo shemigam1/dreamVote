@@ -10,9 +10,4 @@ public interface VoterService {
 
     LogoutResponse logout(LogoutRequest logoutRequest);
 
-    VoteForCandidateResponse vote(VoteForCandidateRequest voteForCandidateRequest);
-
-    ApiResponse nominateCandidate(NominateCandidateRequest nominateCandidateRequest);
-
-    ApiResponse getAllCandidates(GetAllCandidatesRequest getAllCandidatesRequest);
 }

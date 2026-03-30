@@ -50,18 +50,4 @@ public class VoterServiceImpl implements VoterService{
         return mapToLogoutResponse(savedVoter);
     }
 
-    @Override
-    public VoteForCandidateResponse vote(VoteForCandidateRequest voteForCandidateRequest) {
-        return null;
-    }
-
-    @Override
-    public ApiResponse nominateCandidate(NominateCandidateRequest nominateCandidateRequest) {
-        return null;
-    }
-
-    @Override
-    public ApiResponse getAllCandidates(GetAllCandidatesRequest getAllCandidatesRequest) {
-        return null;
-    }
 }
