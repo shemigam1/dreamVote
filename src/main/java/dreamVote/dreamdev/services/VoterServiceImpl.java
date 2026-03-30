@@ -5,10 +5,14 @@ import dreamVote.dreamdev.data.repositories.VoterRepository;
 import dreamVote.dreamdev.dtos.requests.*;
 import dreamVote.dreamdev.dtos.responses.*;
 import dreamVote.dreamdev.exceptions.DuplicateVoterException;
+import dreamVote.dreamdev.exceptions.InvalidLoginDetailsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 import static dreamVote.dreamdev.utils.Mapper.map;
+import static dreamVote.dreamdev.utils.Mapper.mapToLoginResponse;
 
 @Service
 public class VoterServiceImpl implements VoterService{
@@ -26,7 +30,14 @@ public class VoterServiceImpl implements VoterService{
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-        return null;
+        Optional<Voter> optionalVoter = voterRepository.findByEmail(loginRequest.getEmail());
+        if(optionalVoter.isEmpty()) throw new InvalidLoginDetailsException("Voter with email " + loginRequest.getEmail() + " does not exist");
+
+        Voter voter = optionalVoter.get();
+        if(!voter.getPassword().equals(loginRequest.getPassword())) throw new InvalidLoginDetailsException("Invalid password");
+        voter.setLoggedIn(true);
+        Voter savedVoter = voterRepository.save(voter);
+        return mapToLoginResponse(savedVoter);
     }
 
     @Override
