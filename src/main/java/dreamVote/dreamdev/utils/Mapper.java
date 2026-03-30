@@ -1,7 +1,9 @@
 package dreamVote.dreamdev.utils;
 
+import dreamVote.dreamdev.data.models.Election;
 import dreamVote.dreamdev.data.models.Voter;
 import dreamVote.dreamdev.dtos.requests.VoterRegisterationRequest;
+import dreamVote.dreamdev.dtos.responses.CreateElectionResponse;
 import dreamVote.dreamdev.dtos.responses.LoginResponse;
 import dreamVote.dreamdev.dtos.responses.LogoutResponse;
 import dreamVote.dreamdev.dtos.responses.VoterRegisterationResponse;
@@ -36,5 +38,12 @@ public class Mapper {
         logoutResponse.setLoggedIn(savedVoter.isLoggedIn());
         logoutResponse.setEmail(savedVoter.getEmail());
         return logoutResponse;
+    }
+
+    public static CreateElectionResponse mapToCreateElectionResponse(Election newElection){
+        CreateElectionResponse createElectionResponse = new CreateElectionResponse();
+        createElectionResponse.setElectionId(newElection.getId());
+        createElectionResponse.setActive(newElection.isActive());
+        return createElectionResponse;
     }
 }
