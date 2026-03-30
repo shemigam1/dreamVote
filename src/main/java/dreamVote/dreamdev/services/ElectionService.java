@@ -18,4 +18,6 @@ public interface ElectionService {
     CreateElectionResponse createElection(CreateElectionRequest createElectionRequest);
 
     ApiResponse activate(String electionId);
+
+    ApiResponse getPolls(String electionId);
 }

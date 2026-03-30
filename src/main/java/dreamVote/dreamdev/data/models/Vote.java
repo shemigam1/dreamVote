@@ -13,5 +13,6 @@ public class Vote {
     private String id;
     private String voterID;
     private String candidateId;
+    private String electionId;
     private LocalDateTime createdAt = LocalDateTime.now();
 }

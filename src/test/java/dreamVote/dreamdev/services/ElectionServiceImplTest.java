@@ -2,11 +2,10 @@ package dreamVote.dreamdev.services;
 
 import dreamVote.dreamdev.data.repositories.CandidateRepository;
 import dreamVote.dreamdev.data.repositories.ElectionRepository;
+import dreamVote.dreamdev.data.repositories.VoteRepository;
 import dreamVote.dreamdev.data.repositories.VoterRepository;
-import dreamVote.dreamdev.dtos.requests.CreateElectionRequest;
-import dreamVote.dreamdev.dtos.requests.LoginRequest;
-import dreamVote.dreamdev.dtos.requests.NominateCandidateRequest;
-import dreamVote.dreamdev.dtos.requests.VoterRegisterationRequest;
+import dreamVote.dreamdev.dtos.requests.*;
+import dreamVote.dreamdev.dtos.responses.ApiResponse;
 import dreamVote.dreamdev.dtos.responses.CreateElectionResponse;
 import dreamVote.dreamdev.dtos.responses.VoterRegisterationResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,10 +30,16 @@ class ElectionServiceImplTest {
     @Autowired
     private CandidateRepository candidateRepository;
 
+    @Autowired
+    private VoteRepository voteRepository;
+
+
     @BeforeEach
     public void setup() {
         electionRepository.deleteAll();
         voterRepository.deleteAll();
+        candidateRepository.deleteAll();
+        voteRepository.deleteAll();
 
         VoterRegisterationRequest voterRegisterationRequest = new VoterRegisterationRequest();
         voterRegisterationRequest.setEmail("email");
@@ -97,12 +102,54 @@ class ElectionServiceImplTest {
 
         NominateCandidateRequest request = new NominateCandidateRequest();
         request.setElectionId(electionId);
-        request.setFirstName("Alice");
-        request.setLastName("Smith");
+        request.setFirstName("Semil");
+        request.setLastName("Omotade");
 
         assertEquals(0L, candidateRepository.count());
         electionService.nominateCandidate(request);
         assertEquals(1L, candidateRepository.count());
+    }
+
+    @Test
+    public void getAllCandidates_successTest() {
+        String electionId = createActiveElection();
+
+        NominateCandidateRequest nominateRequest = new NominateCandidateRequest();
+        nominateRequest.setElectionId(electionId);
+        nominateRequest.setFirstName("Alice");
+        nominateRequest.setLastName("Smith");
+        electionService.nominateCandidate(nominateRequest);
+
+        String voterId = voterRepository.findByEmail("email").get().getId();
+        GetAllCandidatesRequest getAllRequest = new GetAllCandidatesRequest();
+        getAllRequest.setVoterId(voterId);
+        getAllRequest.setElectionId(electionId);
+
+        ApiResponse response = electionService.getAllCandidates(getAllRequest);
+        assertTrue(response.isSuccess());
+        assertNotNull(response.getData());
+    }
+
+    @Test
+    public void voteForCandidate_successTest() {
+        String electionId = createActiveElection();
+
+        NominateCandidateRequest nominateRequest = new NominateCandidateRequest();
+        nominateRequest.setElectionId(electionId);
+        nominateRequest.setFirstName("Alice");
+        nominateRequest.setLastName("Smith");
+        electionService.nominateCandidate(nominateRequest);
+
+        String voterId = voterRepository.findByEmail("email").get().getId();
+        VoteForCandidateRequest voteRequest = new VoteForCandidateRequest();
+        voteRequest.setElectionId(electionId);
+        voteRequest.setVoterID(voterId);
+        voteRequest.setElectionId(electionId);
+        voteRequest.setCandidateLastName("Smith");
+
+        assertEquals(0L, voteRepository.count());
+        electionService.vote(voteRequest);
+        assertEquals(1L, voteRepository.count());
     }
 
 
