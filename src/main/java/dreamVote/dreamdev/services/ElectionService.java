@@ -16,4 +16,6 @@ public interface ElectionService {
     ApiResponse getAllCandidates(GetAllCandidatesRequest getAllCandidatesRequest);
 
     CreateElectionResponse createElection(CreateElectionRequest createElectionRequest);
+
+    ApiResponse activate(String electionId);
 }

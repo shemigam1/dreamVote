@@ -1,5 +1,6 @@
 package dreamVote.dreamdev.services;
 
+import dreamVote.dreamdev.data.models.Candidate;
 import dreamVote.dreamdev.data.models.Election;
 import dreamVote.dreamdev.data.models.Voter;
 import dreamVote.dreamdev.data.repositories.CandidateRepository;
@@ -13,6 +14,7 @@ import dreamVote.dreamdev.dtos.requests.VoteForCandidateRequest;
 import dreamVote.dreamdev.dtos.responses.ApiResponse;
 import dreamVote.dreamdev.dtos.responses.CreateElectionResponse;
 import dreamVote.dreamdev.dtos.responses.VoteForCandidateResponse;
+import dreamVote.dreamdev.exceptions.InvalidElectionIdException;
 import dreamVote.dreamdev.exceptions.InvalidLoginDetailsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,10 @@ public class ElectionServiceImpl implements ElectionService{
     @Autowired
     private VoteRepository voteRepository;
 
+    private void validateVoter(Voter voter){
+
+    }
+
     @Override
     public VoteForCandidateResponse vote(VoteForCandidateRequest voteForCandidateRequest) {
         return null;
@@ -39,7 +45,8 @@ public class ElectionServiceImpl implements ElectionService{
 
     @Override
     public ApiResponse nominateCandidate(NominateCandidateRequest nominateCandidateRequest) {
-        return null;
+        Candidate newCandidate = new Candidate();
+        newCandidate.setFirstName(nominateCandidateRequest.getFirstName());
     }
 
     @Override
@@ -57,5 +64,17 @@ public class ElectionServiceImpl implements ElectionService{
         election.setActive(false);
         Election savedElection = electionRepository.save(election);
         return mapToCreateElectionResponse(savedElection);
+    }
+
+    @Override
+    public ApiResponse activate(String electionId) {
+        Optional<Election> savedElection = electionRepository.findById(electionId);
+        if (savedElection.isEmpty()) throw new InvalidElectionIdException("Election does not exist");
+
+        Election election = savedElection.get();
+        if (election.isActive()) throw new InvalidElectionIdException("Election is already Active");
+        election.setActive(true);
+        electionRepository.save(election);
+        return new ApiResponse(true, "Election activated successfully");
     }
 }
