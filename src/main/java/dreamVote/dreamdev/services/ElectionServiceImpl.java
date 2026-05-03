@@ -8,18 +8,22 @@ import dreamVote.dreamdev.data.repositories.CandidateRepository;
 import dreamVote.dreamdev.data.repositories.ElectionRepository;
 import dreamVote.dreamdev.data.repositories.VoteRepository;
 import dreamVote.dreamdev.data.repositories.VoterRepository;
-import dreamVote.dreamdev.dtos.requests.CreateElectionRequest;
-import dreamVote.dreamdev.dtos.requests.GetAllCandidatesRequest;
-import dreamVote.dreamdev.dtos.requests.NominateCandidateRequest;
-import dreamVote.dreamdev.dtos.requests.VoteForCandidateRequest;
+import dreamVote.dreamdev.dtos.requests.*;
 import dreamVote.dreamdev.dtos.responses.ApiResponse;
 import dreamVote.dreamdev.dtos.responses.CreateElectionResponse;
 import dreamVote.dreamdev.dtos.responses.VoteForCandidateResponse;
+import dreamVote.dreamdev.dtos.responses.getAllElectionsResponse;
 import dreamVote.dreamdev.exceptions.InvalidElectionIdException;
 import dreamVote.dreamdev.exceptions.InvalidLoginDetailsException;
+import dreamVote.dreamdev.exceptions.InvalidVoterIdException;
+import dreamVote.dreamdev.utils.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static dreamVote.dreamdev.utils.Mapper.*;
@@ -35,51 +39,51 @@ public class ElectionServiceImpl implements ElectionService{
     @Autowired
     private VoteRepository voteRepository;
 
-    private void validateVoter(Voter voter){
-
+    private void validateVoter(Voter voter) {
+        if (!voter.isLoggedIn()) throw new InvalidLoginDetailsException("Voter is not logged in");
     }
 
     @Override
     public VoteForCandidateResponse vote(VoteForCandidateRequest voteForCandidateRequest) {
         Optional<Voter> optionalVoter =
-                voterRepository.findById(voteForCandidateRequest.getVoterID());
+                voterRepository.findById(voteForCandidateRequest.getVoterId());
         if (optionalVoter.isEmpty()) throw new InvalidLoginDetailsException("Voter not found");
-        if (!optionalVoter.get().isLoggedIn()) throw new InvalidLoginDetailsException("Voter is not logged in");
+        validateVoter(optionalVoter.get());
 
         Optional<Election> optionalElection = electionRepository.findById(voteForCandidateRequest.getElectionId());
         if (optionalElection.isEmpty()) throw new InvalidElectionIdException("Election does not exist");
         if (!optionalElection.get().isActive()) throw new InvalidElectionIdException("Election is not active");
 
-        Optional<Candidate> optionalCandidate = candidateRepository.findByLastName(voteForCandidateRequest.getCandidateLastName());
-        if (optionalCandidate.isEmpty()) throw new InvalidElectionIdException("Candidate not found");
+        Election election = optionalElection.get();
+        Candidate optionalCandidate = election.getCandidates().stream()
+                .filter(c -> c.getLastName().equals(voteForCandidateRequest.getCandidateLastName()))
+                .findFirst()
+                .orElseThrow(() -> new InvalidElectionIdException("Candidate not found in this election"));
 
         boolean alreadyVoted = voteRepository.findByVoterIDAndElectionId(
-                voteForCandidateRequest.getVoterID(),
+                voteForCandidateRequest.getVoterId(),
                 voteForCandidateRequest.getElectionId()
         ).isPresent();
         if (alreadyVoted) throw new InvalidLoginDetailsException("Voter has already voted in this election");
 
         Vote vote = new Vote();
-        vote.setVoterID(voteForCandidateRequest.getVoterID());
-        vote.setCandidateId(optionalCandidate.get().getId());
+        vote.setVoterID(voteForCandidateRequest.getVoterId());
+        vote.setCandidateId(optionalCandidate.getId());
         vote.setElectionId(voteForCandidateRequest.getElectionId());
         Vote savedVote = voteRepository.save(vote);
 
-        Election election = optionalElection.get();
         election.getVotes().add(savedVote);
-
-        String candidateName = optionalCandidate.get().getLastName();
-        election.getPoll().merge(candidateName, 1, Integer::sum);
-
+        election.getPoll().merge(optionalCandidate.getLastName(), 1, Integer::sum);
         electionRepository.save(election);
 
-        return mapToVoteForCandidateResponse(optionalVoter.get(), optionalCandidate.get());
+        return mapToVoteForCandidateResponse(optionalVoter.get(), optionalCandidate);
     }
 
     @Override
     public ApiResponse nominateCandidate(NominateCandidateRequest nominateCandidateRequest) {
         Optional<Election> optionalElection = electionRepository.findById(nominateCandidateRequest.getElectionId());
         if (optionalElection.isEmpty()) throw new InvalidElectionIdException("Election does not exist");
+        if (optionalElection.get().isActive()) throw new InvalidElectionIdException("Cannot nominate: election is in voting phase");
 
         Candidate candidate = map(nominateCandidateRequest);
         Candidate savedCandidate = candidateRepository.save(candidate);
@@ -110,14 +114,20 @@ public class ElectionServiceImpl implements ElectionService{
 
         Election election = new Election();
         election.setActive(false);
+        election.setCreatedBy(optionalVoter.get().getId());
+        election.setTitle(createElectionRequest.getTitle());
+        election.setDescription(createElectionRequest.getDescription());
         Election savedElection = electionRepository.save(election);
         return mapToCreateElectionResponse(savedElection);
     }
 
     @Override
-    public ApiResponse activate(String electionId) {
-        Optional<Election> savedElection = electionRepository.findById(electionId);
+    public ApiResponse activate(ActivateElectionRequest activateElectionRequest) {
+        Optional<Election> savedElection = electionRepository.findById(activateElectionRequest.getElectionId());
         if (savedElection.isEmpty()) throw new InvalidElectionIdException("Election does not exist");
+
+        if (!Objects.equals(activateElectionRequest.getVoterId(), savedElection.get().getCreatedBy()))
+            throw new InvalidVoterIdException("Only the user that created the election can activate it");
 
         Election election = savedElection.get();
         if (election.isActive()) throw new InvalidElectionIdException("Election is already Active");
@@ -127,10 +137,72 @@ public class ElectionServiceImpl implements ElectionService{
     }
 
     @Override
+    public ApiResponse deactivate(ActivateElectionRequest activateElectionRequest) {
+        Optional<Election> savedElection = electionRepository.findById(activateElectionRequest.getElectionId());
+        if (savedElection.isEmpty()) throw new InvalidElectionIdException("Election does not exist");
+
+        if (!Objects.equals(activateElectionRequest.getVoterId(), savedElection.get().getCreatedBy()))
+            throw new InvalidVoterIdException("Only the user that created the election can deactivate it");
+
+        Election election = savedElection.get();
+        if (!election.isActive()) throw new InvalidElectionIdException("Election is already deactivated");
+        election.setActive(false);
+        electionRepository.save(election);
+        return new ApiResponse(true, "Election deactivated successfully");
+    }
+
+    @Override
     public ApiResponse getPolls(String electionId) {
         Optional<Election> optionalElection = electionRepository.findById(electionId);
         if (optionalElection.isEmpty()) throw new InvalidElectionIdException("Election does not exist");
 
         return new ApiResponse(true, optionalElection.get().getPoll());
+    }
+
+    @Override
+    public ApiResponse getAllElections(){
+        List<getAllElectionsResponse> elections = electionRepository.findAll()
+                .stream()
+                .map(Mapper::mapToElectionSummary)
+                .toList();
+        return new ApiResponse(true, elections);
+    }
+
+    @Override
+    public ApiResponse getElectionById(String electionId) {
+        Optional<Election> optionalElection = electionRepository.findById(electionId);
+        if (optionalElection.isEmpty()) throw new InvalidElectionIdException("Election does not exist");
+        Election election = optionalElection.get();
+
+        List<Map<String, String>> candidates = election.getCandidates().stream()
+                .map(c -> {
+                    Map<String, String> m = new HashMap<>();
+                    m.put("firstName", c.getFirstName());
+                    m.put("lastName", c.getLastName());
+                    return m;
+                })
+                .toList();
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", election.getId());
+        data.put("title", election.getTitle());
+        data.put("description", election.getDescription());
+        data.put("createdBy", election.getCreatedBy());
+        data.put("active", election.isActive());
+        data.put("createdAt", election.getCreatedAt().toString());
+        data.put("candidates", candidates);
+        data.put("poll", election.getPoll());
+        data.put("voteCount", election.getVotes().size());
+
+        return new ApiResponse(true, data);
+    }
+
+    @Override
+    public ApiResponse getElectionsByCreator(String voterId) {
+        List<getAllElectionsResponse> elections = electionRepository.findByCreatedBy(voterId)
+                .stream()
+                .map(Mapper::mapToElectionSummary)
+                .toList();
+        return new ApiResponse(true, elections);
     }
 }

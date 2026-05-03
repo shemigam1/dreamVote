@@ -1,9 +1,6 @@
 package dreamVote.dreamdev.services;
 
-import dreamVote.dreamdev.dtos.requests.CreateElectionRequest;
-import dreamVote.dreamdev.dtos.requests.GetAllCandidatesRequest;
-import dreamVote.dreamdev.dtos.requests.NominateCandidateRequest;
-import dreamVote.dreamdev.dtos.requests.VoteForCandidateRequest;
+import dreamVote.dreamdev.dtos.requests.*;
 import dreamVote.dreamdev.dtos.responses.ApiResponse;
 import dreamVote.dreamdev.dtos.responses.CreateElectionResponse;
 import dreamVote.dreamdev.dtos.responses.VoteForCandidateResponse;
@@ -17,7 +14,15 @@ public interface ElectionService {
 
     CreateElectionResponse createElection(CreateElectionRequest createElectionRequest);
 
-    ApiResponse activate(String electionId);
+    ApiResponse activate(ActivateElectionRequest activateElectionRequest);
+
+    ApiResponse deactivate(ActivateElectionRequest activateElectionRequest);
 
     ApiResponse getPolls(String electionId);
+
+    ApiResponse getAllElections();
+
+    ApiResponse getElectionById(String electionId);
+
+    ApiResponse getElectionsByCreator(String voterId);
 }

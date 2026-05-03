@@ -1,5 +1,6 @@
 package dreamVote.dreamdev.services;
 
+import dreamVote.dreamdev.data.models.Vote;
 import dreamVote.dreamdev.data.models.Voter;
 import dreamVote.dreamdev.data.repositories.VoterRepository;
 import dreamVote.dreamdev.dtos.requests.*;
@@ -23,7 +24,9 @@ public class VoterServiceImpl implements VoterService{
         if(voterRepository.findByEmail(voterRegisterationRequest.getEmail()).isPresent())
             throw new DuplicateVoterException("Voter with email " +
                 voterRegisterationRequest.getEmail() + " already exists");
-        Voter savedVoter =  voterRepository.save(map(voterRegisterationRequest));
+        Voter voter = map(voterRegisterationRequest);
+        voter.setLoggedIn(true);
+        Voter savedVoter =  voterRepository.save(voter);
         return map(savedVoter);
     }
 

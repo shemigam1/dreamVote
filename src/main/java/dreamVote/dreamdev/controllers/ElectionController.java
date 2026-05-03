@@ -24,10 +24,30 @@ public class ElectionController {
         }
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse> getAllElections(){
+        try{
+            return ResponseEntity.ok(electionService.getAllElections());
+        } catch (DreamVoteException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
     @PatchMapping("/{electionId}/activate")
-    public ResponseEntity<ApiResponse> activate(@PathVariable String electionId) {
+    public ResponseEntity<ApiResponse> activate(@PathVariable String electionId, @RequestBody ActivateElectionRequest request) {
         try {
-            return ResponseEntity.ok(electionService.activate(electionId));
+            request.setElectionId(electionId);
+            return ResponseEntity.ok(electionService.activate(request));
+        } catch (DreamVoteException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{electionId}/deactivate")
+    public ResponseEntity<ApiResponse> deactivate(@PathVariable String electionId, @RequestBody ActivateElectionRequest request) {
+        try {
+            request.setElectionId(electionId);
+            return ResponseEntity.ok(electionService.deactivate(request));
         } catch (DreamVoteException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(false, e.getMessage()));
         }
@@ -64,6 +84,24 @@ public class ElectionController {
     public ResponseEntity<ApiResponse> viewPolls(@PathVariable String electionId) {
         try {
             return ResponseEntity.ok(electionService.getPolls(electionId));
+        } catch (DreamVoteException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{electionId}")
+    public ResponseEntity<ApiResponse> getElectionById(@PathVariable String electionId) {
+        try {
+            return ResponseEntity.ok(electionService.getElectionById(electionId));
+        } catch (DreamVoteException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/creator/{voterId}")
+    public ResponseEntity<ApiResponse> getElectionsByCreator(@PathVariable String voterId) {
+        try {
+            return ResponseEntity.ok(electionService.getElectionsByCreator(voterId));
         } catch (DreamVoteException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(false, e.getMessage()));
         }

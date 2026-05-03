@@ -3,6 +3,7 @@ package dreamVote.dreamdev.data.models;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
@@ -16,5 +17,6 @@ public class Voter {
     private String email;
     private String password;
     private LocalDateTime createdAt = LocalDateTime.now();
-    private boolean isLoggedIn;
+    @Field("loggedIn")
+    private boolean loggedIn;
 }

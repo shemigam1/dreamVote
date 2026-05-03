@@ -68,6 +68,12 @@ public class VoterServiceImplTest {
     }
 
     @Test
+    public void register_voterIsNotLoggedInTest(){
+        voterService.register(voterRegisterationRequest);
+        assertFalse(voterRepository.findByEmail("email").get().isLoggedIn());
+    }
+
+    @Test
     public void loginWithWrongPassword_throwExceptionTest(){
         voterService.register(voterRegisterationRequest);
         LoginRequest invalidRequest = new LoginRequest();

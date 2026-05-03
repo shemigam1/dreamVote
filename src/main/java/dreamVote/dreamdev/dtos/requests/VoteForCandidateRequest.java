@@ -1,10 +1,13 @@
 package dreamVote.dreamdev.dtos.requests;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class VoteForCandidateRequest {
-    private String voterID;
+    private String voterId;
     private String electionId;
     private String candidateLastName;
 }

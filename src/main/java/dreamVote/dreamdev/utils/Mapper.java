@@ -14,6 +14,7 @@ public class Mapper {
         voter.setLastName(request.getLastName());
         voter.setEmail(request.getEmail());
         voter.setPassword(request.getPassword());
+        voter.setLoggedIn(false);
         return voter;
     }
 
@@ -22,6 +23,8 @@ public class Mapper {
         response.setVoterId(voter.getId());
         response.setEmail(voter.getEmail());
         response.setLoggedIn(voter.isLoggedIn());
+        response.setFirstName(voter.getFirstName());
+        response.setLastName(voter.getLastName());
         return response;
     }
 
@@ -29,6 +32,7 @@ public class Mapper {
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setLoggedIn(savedVoter.isLoggedIn());
         loginResponse.setEmail(savedVoter.getEmail());
+        loginResponse.setVoterId(savedVoter.getId());
         return loginResponse;
     }
 
@@ -63,4 +67,17 @@ public class Mapper {
         response.setLoggedIn(voter.isLoggedIn());
         return response;
     }
+
+    public static getAllElectionsResponse mapToElectionSummary(Election election) {
+        return new getAllElectionsResponse(
+                election.getId(),
+                election.getTitle(),
+                election.getCreatedAt(),
+                election.isActive(),
+                election.getCandidates().size(),
+                election.getVotes().size()
+        );
+    }
 }
+
+
